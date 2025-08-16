@@ -3,7 +3,7 @@
  * Plugin Name: WhatsApp SaaS Plugin
  * Plugin URI: https://github.com/ferrantealberto/whatsapp-saas
  * Description: Plugin SaaS completo per gestione numeri WhatsApp con integrazione n8n - TUTTE LE SEZIONI COMPLETAMENTE FUNZIONALI
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Alberto Ferrante
  * Text Domain: wsp
  * Domain Path: /languages
@@ -22,18 +22,34 @@ if (!defined('ABSPATH')) {
 }
 
 // Definisci costanti del plugin
-define('WSP_VERSION', '1.0.1');
+define('WSP_VERSION', '1.0.2');
 define('WSP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WSP_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('WSP_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 /**
- * Classe principale del plugin
+ * Classe principale del plugin WhatsApp SaaS
+ * Compatibile con PHP 8.2+ (proprietà dichiarate esplicitamente)
  */
 class WhatsAppSaasPlugin {
     
+    /**
+     * Istanza singleton
+     * @var WhatsAppSaasPlugin|null
+     */
     private static $instance = null;
+    
+    /**
+     * Flag per evitare caricamenti multipli delle dipendenze
+     * @var bool
+     */
     private $dependencies_loaded = false;
+    
+    /**
+     * Istanza della classe admin
+     * @var WSP_Admin|null
+     */
+    private $admin = null;
     
     public static function get_instance() {
         if (self::$instance === null) {
