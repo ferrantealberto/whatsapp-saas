@@ -1,0 +1,436 @@
+{
+  "webhook_examples": {
+    "description": "Esempi di payload webhook per il WhatsApp SaaS Plugin",
+    "base_url": "https://tuosito.com/wp-json/wsp/v1",
+    "authentication": {
+      "type": "API Key",
+      "header": "X-API-Key",
+      "example": "demo-api-key-9lz721sv0xTjFNVA"
+    },
+    
+    "examples": [
+      {
+        "name": "Estrazione Singolo Numero da Email",
+        "endpoint": "/extract",
+        "method": "POST",
+        "headers": {
+          "X-API-Key": "demo-api-key-9lz721sv0xTjFNVA",
+          "Content-Type": "application/json"
+        },
+        "payload": {
+          "email_content": "Ciao! Sono interessato al vostro prodotto. Il mio numero WhatsApp è 3331234567. Grazie!",
+          "sender_email": "mario.rossi@example.com",
+          "subject": "Richiesta info prodotto",
+          "message_id": "gmail-msg-001",
+          "received_at": "2025-08-16T10:30:00Z"
+        },
+        "expected_response": {
+          "success": true,
+          "message": "Numeri WhatsApp estratti e salvati con successo",
+          "numbers_extracted": 1,
+          "numbers_saved": 1,
+          "numbers": [
+            {
+              "number": "3331234567",
+              "formatted": "+39 333 123 4567",
+              "validation": "valid_italian_mobile"
+            }
+          ],
+          "duplicates_skipped": 0,
+          "errors": []
+        }
+      },
+      
+      {
+        "name": "Estrazione Multipli Numeri Internazionali",
+        "endpoint": "/extract", 
+        "method": "POST",
+        "headers": {
+          "X-API-Key": "demo-api-key-9lz721sv0xTjFNVA",
+          "Content-Type": "application/json"
+        },
+        "payload": {
+          "email_content": "Contatti azienda: Ufficio Italia +39 333 567 8901, Ufficio USA +1 555 123 4567, WhatsApp personale 334.789.0123",
+          "sender_email": "info@business-company.com",
+          "subject": "Contatti aziendali aggiornati",
+          "message_id": "gmail-msg-002",
+          "received_at": "2025-08-16T11:15:00Z"
+        },
+        "expected_response": {
+          "success": true,
+          "message": "Numeri WhatsApp estratti e salvati con successo",
+          "numbers_extracted": 2,
+          "numbers_saved": 2,
+          "numbers": [
+            {
+              "number": "+39 333 567 8901",
+              "formatted": "+39 333 567 8901", 
+              "validation": "valid_italian_international"
+            },
+            {
+              "number": "334.789.0123",
+              "formatted": "+39 334 789 0123",
+              "validation": "valid_italian_mobile"
+            }
+          ],
+          "duplicates_skipped": 0,
+          "errors": [],
+          "note": "Numero USA +1 555 123 4567 scartato (fuori target italiano)"
+        }
+      },
+      
+      {
+        "name": "Email Senza Numeri WhatsApp",
+        "endpoint": "/extract",
+        "method": "POST", 
+        "headers": {
+          "X-API-Key": "demo-api-key-9lz721sv0xTjFNVA",
+          "Content-Type": "application/json"
+        },
+        "payload": {
+          "email_content": "Grazie per la vostra email. Vi ricontatteremo presto per email.",
+          "sender_email": "cliente@nophone.com",
+          "subject": "Ringraziamento servizio",
+          "message_id": "gmail-msg-003",
+          "received_at": "2025-08-16T12:00:00Z"
+        },
+        "expected_response": {
+          "success": true,
+          "message": "Email processata, nessun numero WhatsApp trovato",
+          "numbers_extracted": 0,
+          "numbers_saved": 0,
+          "numbers": [],
+          "duplicates_skipped": 0,
+          "errors": []
+        }
+      },
+      
+      {
+        "name": "Gestione Duplicati",
+        "endpoint": "/extract",
+        "method": "POST",
+        "headers": {
+          "X-API-Key": "demo-api-key-9lz721sv0xTjFNVA", 
+          "Content-Type": "application/json"
+        },
+        "payload": {
+          "email_content": "Il mio numero è sempre 3331234567, puoi contattarmi anche al 3331234567",
+          "sender_email": "mario.rossi@example.com",
+          "subject": "Conferma contatto",
+          "message_id": "gmail-msg-004", 
+          "received_at": "2025-08-16T13:30:00Z"
+        },
+        "expected_response": {
+          "success": true,
+          "message": "Numeri WhatsApp estratti con duplicati gestiti",
+          "numbers_extracted": 1,
+          "numbers_saved": 0,
+          "numbers": [
+            {
+              "number": "3331234567",
+              "formatted": "+39 333 123 4567",
+              "validation": "duplicate_existing",
+              "first_seen": "2025-08-16T10:30:00Z"
+            }
+          ],
+          "duplicates_skipped": 1,
+          "errors": []
+        }
+      },
+      
+      {
+        "name": "Batch Processing n8n",
+        "endpoint": "/extract",
+        "method": "POST",
+        "headers": {
+          "X-API-Key": "demo-api-key-9lz721sv0xTjFNVA",
+          "Content-Type": "application/json"
+        },
+        "payload": {
+          "batch": true,
+          "emails": [
+            {
+              "email_content": "WhatsApp: 3331111111",
+              "sender_email": "user1@test.com", 
+              "subject": "Test 1",
+              "message_id": "batch-001"
+            },
+            {
+              "email_content": "Chiamatemi al +39 333 222 2222",
+              "sender_email": "user2@test.com",
+              "subject": "Test 2", 
+              "message_id": "batch-002"
+            },
+            {
+              "email_content": "No phone number here",
+              "sender_email": "user3@test.com",
+              "subject": "Test 3",
+              "message_id": "batch-003"
+            }
+          ]
+        },
+        "expected_response": {
+          "success": true,
+          "message": "Batch di 3 email processate",
+          "batch_summary": {
+            "total_emails": 3,
+            "emails_with_numbers": 2,
+            "total_numbers_extracted": 2,
+            "total_numbers_saved": 2,
+            "total_duplicates": 0,
+            "total_errors": 0
+          },
+          "results": [
+            {
+              "email_id": "batch-001",
+              "numbers_found": 1,
+              "numbers_saved": 1,
+              "status": "success"
+            },
+            {
+              "email_id": "batch-002", 
+              "numbers_found": 1,
+              "numbers_saved": 1,
+              "status": "success"
+            },
+            {
+              "email_id": "batch-003",
+              "numbers_found": 0,
+              "numbers_saved": 0,
+              "status": "no_numbers"
+            }
+          ]
+        }
+      }
+    ],
+    
+    "other_endpoints": [
+      {
+        "name": "Health Check API",
+        "endpoint": "/ping",
+        "method": "GET",
+        "headers": {
+          "X-API-Key": "demo-api-key-9lz721sv0xTjFNVA"
+        },
+        "payload": null,
+        "expected_response": {
+          "success": true,
+          "message": "WhatsApp SaaS Plugin API is active",
+          "version": "1.0.2",
+          "timestamp": "2025-08-16T15:30:00Z",
+          "server_time": "2025-08-16 17:30:00",
+          "timezone": "Europe/Rome"
+        }
+      },
+      
+      {
+        "name": "Statistiche Crediti Utente",
+        "endpoint": "/credits",
+        "method": "GET",
+        "headers": {
+          "X-API-Key": "demo-api-key-9lz721sv0xTjFNVA"
+        },
+        "payload": null,
+        "expected_response": {
+          "success": true,
+          "user_id": 1,
+          "credits": {
+            "current_balance": 850,
+            "total_purchased": 2000,
+            "total_used": 1150,
+            "last_recharge": "2025-08-10T09:00:00Z",
+            "auto_recharge": {
+              "enabled": true,
+              "threshold": 100,
+              "plan": "professional"
+            }
+          },
+          "usage_stats": {
+            "today": 25,
+            "this_week": 180,
+            "this_month": 650
+          }
+        }
+      },
+      
+      {
+        "name": "Cronologia Messaggi Inviati",
+        "endpoint": "/messages",
+        "method": "GET",
+        "headers": {
+          "X-API-Key": "demo-api-key-9lz721sv0xTjFNVA"
+        },
+        "query_params": "?limit=5&status=sent",
+        "expected_response": {
+          "success": true,
+          "messages": [
+            {
+              "id": 123,
+              "recipient_number": "+39 333 123 4567",
+              "message_content": "🎉 Ciao Mario! Il tuo numero +39 333 123 4567 è stato registrato.",
+              "status": "delivered",
+              "credits_used": 1,
+              "sent_at": "2025-08-16T10:35:00Z",
+              "delivery_confirmed_at": "2025-08-16T10:35:15Z"
+            },
+            {
+              "id": 124,
+              "recipient_number": "+39 333 567 8901", 
+              "message_content": "Grazie per il tuo interesse! Ti contatteremo presto.",
+              "status": "sent",
+              "credits_used": 1,
+              "sent_at": "2025-08-16T11:20:00Z",
+              "delivery_confirmed_at": null
+            }
+          ],
+          "pagination": {
+            "current_page": 1,
+            "per_page": 5,
+            "total_messages": 47,
+            "total_pages": 10
+          }
+        }
+      },
+      
+      {
+        "name": "Invio Messaggio WhatsApp",
+        "endpoint": "/send",
+        "method": "POST",
+        "headers": {
+          "X-API-Key": "demo-api-key-9lz721sv0xTjFNVA",
+          "Content-Type": "application/json"
+        },
+        "payload": {
+          "recipient": "+39 333 123 4567",
+          "message": "🎉 Ciao! Grazie per aver condiviso il tuo numero WhatsApp. Ti contatteremo presto!",
+          "template": "welcome_message",
+          "variables": {
+            "nome": "Mario",
+            "numero": "+39 333 123 4567"
+          }
+        },
+        "expected_response": {
+          "success": true,
+          "message": "Messaggio WhatsApp inviato con successo",
+          "message_id": "wsp_msg_789",
+          "recipient": "+39 333 123 4567",
+          "credits_used": 1,
+          "credits_remaining": 849,
+          "status": "sent",
+          "external_id": "mail2wa_abc123xyz",
+          "sent_at": "2025-08-16T15:45:00Z"
+        }
+      }
+    ],
+    
+    "error_responses": [
+      {
+        "name": "API Key Invalida",
+        "scenario": "Header X-API-Key mancante o errato",
+        "response": {
+          "success": false,
+          "error": "Invalid API key",
+          "error_code": "INVALID_API_KEY", 
+          "message": "Please provide a valid API key in X-API-Key header",
+          "timestamp": "2025-08-16T15:30:00Z"
+        },
+        "http_status": 401
+      },
+      
+      {
+        "name": "Rate Limit Exceeded",
+        "scenario": "Troppi requests dall'API key (>100/min)",
+        "response": {
+          "success": false,
+          "error": "Rate limit exceeded",
+          "error_code": "RATE_LIMIT_EXCEEDED",
+          "message": "Maximum 100 requests per minute per API key", 
+          "retry_after": 60,
+          "timestamp": "2025-08-16T15:30:00Z"
+        },
+        "http_status": 429
+      },
+      
+      {
+        "name": "Crediti Insufficienti",
+        "scenario": "Tentativo invio messaggio senza crediti",
+        "response": {
+          "success": false,
+          "error": "Insufficient credits",
+          "error_code": "INSUFFICIENT_CREDITS",
+          "message": "Not enough credits to send message. Current balance: 0",
+          "credits_needed": 1,
+          "credits_available": 0,
+          "recharge_url": "https://tuosito.com/wp-admin/admin.php?page=wsp-credits",
+          "timestamp": "2025-08-16T15:30:00Z"
+        },
+        "http_status": 402
+      },
+      
+      {
+        "name": "Payload Malformato",
+        "scenario": "JSON invalido o campi mancanti",
+        "response": {
+          "success": false,
+          "error": "Invalid payload",
+          "error_code": "INVALID_PAYLOAD",
+          "message": "Required field 'email_content' is missing",
+          "validation_errors": [
+            {
+              "field": "email_content",
+              "error": "This field is required"
+            },
+            {
+              "field": "sender_email", 
+              "error": "Invalid email format"
+            }
+          ],
+          "timestamp": "2025-08-16T15:30:00Z"
+        },
+        "http_status": 400
+      }
+    ],
+    
+    "curl_examples": [
+      {
+        "name": "Test Health Check",
+        "command": "curl -X GET 'https://tuosito.com/wp-json/wsp/v1/ping' -H 'X-API-Key: demo-api-key-9lz721sv0xTjFNVA'"
+      },
+      {
+        "name": "Estrai Numeri da Email",
+        "command": "curl -X POST 'https://tuosito.com/wp-json/wsp/v1/extract' -H 'X-API-Key: demo-api-key-9lz721sv0xTjFNVA' -H 'Content-Type: application/json' -d '{\"email_content\":\"Il mio WhatsApp è 3331234567\",\"sender_email\":\"test@example.com\",\"subject\":\"Test\"}'"
+      },
+      {
+        "name": "Controlla Crediti",
+        "command": "curl -X GET 'https://tuosito.com/wp-json/wsp/v1/credits' -H 'X-API-Key: demo-api-key-9lz721sv0xTjFNVA'"
+      },
+      {
+        "name": "Invia Messaggio WhatsApp",
+        "command": "curl -X POST 'https://tuosito.com/wp-json/wsp/v1/send' -H 'X-API-Key: demo-api-key-9lz721sv0xTjFNVA' -H 'Content-Type: application/json' -d '{\"recipient\":\"+39 333 123 4567\",\"message\":\"Ciao! Messaggio di test.\"}'"
+      }
+    ],
+    
+    "n8n_integration": {
+      "description": "Configurazione nodi n8n per integrazione",
+      "http_request_node": {
+        "url": "{{ $vars.WORDPRESS_API_URL }}/wp-json/wsp/v1/extract",
+        "method": "POST",
+        "headers": {
+          "X-API-Key": "{{ $vars.WORDPRESS_API_KEY }}",
+          "Content-Type": "application/json"
+        },
+        "body": "{{ JSON.stringify($json) }}",
+        "timeout": 30000,
+        "retry": {
+          "enabled": true,
+          "maxRetries": 3
+        }
+      },
+      "environment_variables": {
+        "WORDPRESS_API_URL": "https://tuosito.com",
+        "WORDPRESS_API_KEY": "demo-api-key-9lz721sv0xTjFNVA",
+        "MAIL2WA_API_KEY": "wml2wa_live_abc123xyz789"
+      }
+    }
+  }
+}
