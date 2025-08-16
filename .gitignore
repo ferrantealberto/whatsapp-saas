@@ -1,0 +1,49 @@
+# WordPress Plugin Development
+*.log
+*.tmp
+*.cache
+.DS_Store
+Thumbs.db
+
+# IDE Files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node modules (se usati per build)
+node_modules/
+npm-debug.log*
+
+# Plugin ZIP files (except releases)
+*.zip
+
+# Backup files
+*.backup
+*.bak
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*~
+.tmp
+
+# WordPress specific
+wp-config.php
+.htaccess
+
+# Logs
+error_log
+debug.log
+
+# Environment files
+.env
+.env.local
+.env.production

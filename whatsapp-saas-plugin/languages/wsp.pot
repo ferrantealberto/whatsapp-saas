@@ -1,0 +1,53 @@
+# WhatsApp SaaS Plugin Translation Template
+# Copyright (C) 2024 Alberto Ferrante  
+# This file is distributed under the same license as the WhatsApp SaaS Plugin package.
+msgid ""
+msgstr ""
+"Project-Id-Version: WhatsApp SaaS Plugin 1.0.0\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2024-08-16 22:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WordPress Plugin\n"
+
+#: admin/class-wsp-admin.php:23
+msgid "WhatsApp SaaS"
+msgstr ""
+
+#: admin/class-wsp-admin.php:35  
+msgid "Dashboard"
+msgstr ""
+
+#: admin/class-wsp-admin.php:44
+msgid "Numeri WhatsApp" 
+msgstr ""
+
+#: admin/class-wsp-admin.php:53
+msgid "Messaggi"
+msgstr ""
+
+#: admin/class-wsp-admin.php:62
+msgid "Crediti"
+msgstr ""
+
+#: admin/class-wsp-admin.php:71
+msgid "Impostazioni"
+msgstr ""
+
+#: admin/class-wsp-admin.php:80
+msgid "Logs"
+msgstr ""
+
+#: includes/class-wsp-api.php:55
+msgid "API Key non valida"
+msgstr ""
+
+#: includes/class-wsp-api.php:70  
+msgid "Dati numeri non validi"
+msgstr ""
+
+#: includes/class-wsp-api.php:94
+msgid "Elaborati %d numeri, salvati %d"
+msgstr ""

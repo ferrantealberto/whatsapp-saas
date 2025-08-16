@@ -1,0 +1,150 @@
+{
+  "name": "WhatsApp SaaS - Email Processing Workflow",
+  "description": "Workflow completo per estrazione automatica numeri WhatsApp da Gmail e invio via WordPress API",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "start-node",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "format": "simple",
+        "limit": 100,
+        "filters": {
+          "query": "has:attachment OR body:whatsapp OR body:telefono OR body:numero OR body:contatto"
+        }
+      },
+      "id": "gmail-trigger",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-oauth-credentials",
+          "name": "Gmail OAuth2 Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nconst patterns = [\n  /(?:\\+39[\\s\\-\\.]?)?3[0-9]{2}[\\s\\-\\.]?[0-9]{3}[\\s\\-\\.]?[0-9]{4}/g,\n  /(?:\\+[1-9][0-9]{0,3}[\\s\\-\\.]?)?[0-9]{2,4}[\\s\\-\\.]?[0-9]{3,4}[\\s\\-\\.]?[0-9]{3,4}/g\n];\n\nfor (const item of items) {\n  const emailData = item.json;\n  const searchText = [\n    emailData.subject || '',\n    emailData.snippet || '',\n    emailData.bodyPlain || ''\n  ].join(' ');\n  \n  const foundNumbers = new Set();\n  \n  patterns.forEach(pattern => {\n    const matches = searchText.match(pattern);\n    if (matches) {\n      matches.forEach(match => {\n        let cleanNumber = match.replace(/[^\\d\\+]/g, '');\n        if (cleanNumber.length >= 10) {\n          if (cleanNumber.startsWith('39') && cleanNumber.length === 12) {\n            cleanNumber = '+' + cleanNumber;\n          } else if (cleanNumber.length === 10 && cleanNumber.startsWith('3')) {\n            cleanNumber = '+39' + cleanNumber;\n          }\n          foundNumbers.add(cleanNumber);\n        }\n      });\n    }\n  });\n  \n  foundNumbers.forEach(number => {\n    results.push({\n      messageId: emailData.id,\n      threadId: emailData.threadId,\n      senderNumber: number,\n      senderName: emailData.senderName || '',\n      senderFormatted: number,\n      senderEmail: emailData.senderEmail || '',\n      extractionMethod: 'n8n_pattern_matching',\n      rawMatch: number,\n      emailDate: emailData.date,\n      processedDate: new Date().toISOString().split('T')[0],\n      processedTime: new Date().toLocaleTimeString(),\n      subject: emailData.subject || '',\n      snippet: emailData.snippet || '',\n      isNewSender: true,\n      hasRecipient: true\n    });\n  });\n}\n\nconst uniqueResults = [];\nconst seen = new Set();\n\nresults.forEach(result => {\n  const key = `${result.senderNumber}_${result.processedDate}`;\n  if (!seen.has(key)) {\n    seen.add(key);\n    uniqueResults.push(result);\n  }\n});\n\nconsole.log(`Trovati ${uniqueResults.length} numeri WhatsApp unici`);\n\nreturn uniqueResults.map(result => ({ json: result }));"
+      },
+      "id": "number-extractor",
+      "name": "WhatsApp Number Extractor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (items.length === 0) {\n  return [];\n}\n\nconst groupedData = {\n  wordpress_api_url: $vars.WORDPRESS_API_URL || 'https://tuosito.com',\n  wordpress_api_key: $vars.WORDPRESS_API_KEY || 'demo-api-key-9lz721sv0xTjFNVA',\n  extracted_numbers: items.map(item => item.json)\n};\n\nconsole.log(`Preparati ${groupedData.extracted_numbers.length} numeri per WordPress`);\n\nreturn [{ json: groupedData }];"
+      },
+      "id": "prepare-api-data",
+      "name": "Prepare API Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.wordpress_api_url}}/wp-json/wsp/v1/extract",
+        "authentication": "headerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{$json.wordpress_api_key}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\"numbers\": $json.extracted_numbers}",
+        "options": {
+          "timeout": 30000,
+          "retry": {
+            "enabled": true,
+            "maxAttempts": 3
+          }
+        }
+      },
+      "id": "wordpress-api-call",
+      "name": "Send to WordPress API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Gmail Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Number Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Number Extractor": {
+      "main": [
+        [
+          {
+            "node": "Prepare API Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare API Data": {
+      "main": [
+        [
+          {
+            "node": "Send to WordPress API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "timezone": "Europe/Rome",
+    "saveManualExecutions": true
+  },
+  "staticData": {},
+  "tags": [
+    {
+      "id": "whatsapp-saas",
+      "name": "WhatsApp SaaS"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2024-08-16T22:00:00.000Z",
+  "versionId": "1.0.0"
+}
