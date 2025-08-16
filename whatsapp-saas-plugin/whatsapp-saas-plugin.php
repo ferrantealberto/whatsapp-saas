@@ -3,7 +3,7 @@
  * Plugin Name: WhatsApp SaaS Plugin
  * Plugin URI: https://github.com/ferrantealberto/whatsapp-saas
  * Description: Plugin SaaS completo per gestione numeri WhatsApp con integrazione n8n - TUTTE LE SEZIONI COMPLETAMENTE FUNZIONALI
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Alberto Ferrante
  * Text Domain: wsp
  * Domain Path: /languages
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Definisci costanti del plugin
-define('WSP_VERSION', '1.0.0');
+define('WSP_VERSION', '1.0.1');
 define('WSP_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WSP_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('WSP_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -33,6 +33,7 @@ define('WSP_PLUGIN_BASENAME', plugin_basename(__FILE__));
 class WhatsAppSaasPlugin {
     
     private static $instance = null;
+    private $dependencies_loaded = false;
     
     public static function get_instance() {
         if (self::$instance === null) {
@@ -55,7 +56,7 @@ class WhatsAppSaasPlugin {
         $this->load_dependencies();
         
         // Inizializza admin se siamo nel backend
-        if (is_admin()) {
+        if (is_admin() && class_exists('WSP_Admin')) {
             $this->admin = new WSP_Admin();
         }
         
@@ -64,19 +65,51 @@ class WhatsAppSaasPlugin {
     }
     
     private function load_dependencies() {
-        require_once WSP_PLUGIN_DIR . 'includes/class-wsp-database.php';
-        require_once WSP_PLUGIN_DIR . 'includes/class-wsp-api.php';
-        require_once WSP_PLUGIN_DIR . 'admin/class-wsp-admin.php';
-        require_once WSP_PLUGIN_DIR . 'includes/class-wsp-messages.php';
-        require_once WSP_PLUGIN_DIR . 'includes/class-wsp-credits.php';
+        // Evita caricamenti multipli
+        if ($this->dependencies_loaded) {
+            return;
+        }
+        
+        $files = array(
+            'includes/class-wsp-database.php',
+            'includes/class-wsp-api.php', 
+            'admin/class-wsp-admin.php',
+            'includes/class-wsp-messages.php',
+            'includes/class-wsp-credits.php'
+        );
+        
+        foreach ($files as $file) {
+            $file_path = WSP_PLUGIN_DIR . $file;
+            if (file_exists($file_path)) {
+                require_once $file_path;
+            } else {
+                error_log("WhatsApp SaaS Plugin: File non trovato - " . $file_path);
+                // Mostra errore anche nell'admin se è presente
+                if (is_admin()) {
+                    add_action('admin_notices', function() use ($file) {
+                        echo '<div class="error"><p>WhatsApp SaaS Plugin: File mancante - ' . esc_html($file) . '</p></div>';
+                    });
+                }
+            }
+        }
+        
+        $this->dependencies_loaded = true;
     }
     
     public function register_api_routes() {
+        // Assicurati che le dipendenze siano caricate
+        if (!class_exists('WSP_API')) {
+            $this->load_dependencies();
+        }
+        
         $api = new WSP_API();
         $api->register_routes();
     }
     
     public function activate() {
+        // Carica le dipendenze necessarie per l'attivazione
+        $this->load_dependencies();
+        
         // Crea le tabelle del database
         WSP_Database::create_tables();
         
