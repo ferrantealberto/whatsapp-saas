@@ -1,0 +1,65 @@
+{
+  "node_name": "Send to WordPress API",
+  "node_type": "n8n-nodes-base.httpRequest",
+  "parameters": {
+    "url": "={{ $vars.WORDPRESS_API_URL }}/wp-json/wsp/v1/extract",
+    "authentication": "predefinedCredentialType",
+    "nodeCredentialType": "httpHeaderAuth",
+    "sendHeaders": true,
+    "headerParameters": {
+      "parameters": [
+        {
+          "name": "X-API-Key",
+          "value": "={{ $vars.WORDPRESS_API_KEY }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    "sendBody": true,
+    "bodyContentType": "json",
+    "jsonBody": "={{ JSON.stringify($json) }}",
+    "options": {
+      "timeout": 30000,
+      "retry": {
+        "enabled": true,
+        "maxRetries": 3
+      }
+    }
+  },
+  "required_variables": {
+    "WORDPRESS_API_URL": {
+      "example": "https://yourdomain.com",
+      "description": "WordPress site URL without trailing slash"
+    },
+    "WORDPRESS_API_KEY": {
+      "example": "wsp_1234567890abcdef",
+      "description": "API Key from WordPress WhatsApp SaaS plugin settings"
+    }
+  },
+  "expected_input": {
+    "email_id": "string",
+    "sender_email": "string", 
+    "subject": "string",
+    "reply_to": "string",
+    "extracted_numbers": ["array of strings"],
+    "numbers_count": "number",
+    "source": "string",
+    "timestamp": "ISO date string"
+  },
+  "expected_output": {
+    "success": true,
+    "message": "Numbers saved successfully",
+    "numbers_saved": 1,
+    "numbers_processed": ["393933930461"],
+    "source": "mail2wa"
+  },
+  "troubleshooting": {
+    "status_401": "Invalid API Key - Check WORDPRESS_API_KEY variable",
+    "status_404": "Endpoint not found - Check plugin activation and WORDPRESS_API_URL",
+    "status_500": "Server error - Check WordPress logs and database connection",
+    "timeout": "Request timeout - Check server response time and network"
+  }
+}
