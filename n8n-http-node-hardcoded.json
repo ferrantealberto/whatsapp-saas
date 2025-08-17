@@ -1,0 +1,63 @@
+{
+  "name": "Send to WordPress API (No Variables)",
+  "type": "n8n-nodes-base.httpRequest",
+  "parameters": {
+    "method": "POST",
+    "url": "https://TUODOMINIO.com/wp-json/wsp/v1/extract",
+    "sendHeaders": true,
+    "headerParameters": {
+      "parameters": [
+        {
+          "name": "X-API-Key",
+          "value": "LA_TUA_API_KEY_WORDPRESS"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ]
+    },
+    "sendBody": true,
+    "bodyContentType": "json",
+    "jsonBody": "={{ JSON.stringify($json) }}",
+    "options": {
+      "timeout": 30000,
+      "retry": {
+        "enabled": true,
+        "maxRetries": 3
+      }
+    }
+  },
+  "instructions": {
+    "step1": "Replace 'TUODOMINIO.com' with your actual WordPress domain",
+    "step2": "Replace 'LA_TUA_API_KEY_WORDPRESS' with your actual API key from WordPress plugin",
+    "step3": "Save the node and test the workflow"
+  },
+  "examples": {
+    "url": "https://miosito.com/wp-json/wsp/v1/extract",
+    "api_key": "wsp_abc123def456789"
+  },
+  "how_to_get_values": {
+    "wordpress_url": "Your WordPress site domain (e.g., https://yoursite.com)",
+    "api_key": "WordPress Admin → WhatsApp SaaS → Settings → Copy API Key"
+  },
+  "expected_input": {
+    "email_id": "198b3b2ffe97a59e",
+    "sender_email": "test@example.com",
+    "extracted_numbers": ["393933930461"],
+    "numbers_count": 1,
+    "source": "email"
+  },
+  "expected_output": {
+    "success": true,
+    "message": "Numbers saved successfully",
+    "numbers_saved": 1,
+    "numbers_processed": ["393933930461"]
+  },
+  "troubleshooting": {
+    "401_error": "Invalid API Key - Check and copy correct key from WordPress",
+    "404_error": "URL wrong or plugin not active - Verify WordPress plugin activation",
+    "500_error": "WordPress server error - Check WordPress error logs",
+    "timeout": "Server too slow - Increase timeout or check hosting performance"
+  }
+}
